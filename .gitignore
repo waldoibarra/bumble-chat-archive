@@ -1,0 +1,5 @@
+.auth-state.json
+conversation.json
+media/
+dist/
+node_modules/

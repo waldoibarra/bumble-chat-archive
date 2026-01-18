@@ -1,0 +1,15 @@
+{
+  "name": "@archive/scraper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/node/index.js",
+  "scripts": {
+    "postinstall": "playwright install chromium",
+    "build": "tsc -p ../../tsconfig.node.json",
+    "start": "npm run build && node dist/node/run-archiver.js"
+  },
+  "dependencies": {
+    "playwright": "^1.57.0"
+  }
+}

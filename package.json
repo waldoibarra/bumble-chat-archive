@@ -1,0 +1,26 @@
+{
+  "name": "bumble-chat-archive",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "scrape": "npm run -w @archive/scraper start",
+    "web": "npm run -w @archive/web dev",
+    "build": "npm run -w @archive/web build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p tsconfig.node.json && tsc -p tsconfig.browser.json"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "eslint": "9.39.2",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-js": "github:eslint/js",
+    "eslint-plugin-lit": "2.1.1",
+    "prettier": "3.8.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.53.0"
+  }
+}

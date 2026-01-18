@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "rootDir": ".",
+    "outDir": "dist/browser",
+    "noEmit": true
+  },
+  "include": [
+    "packages/scraper/src/browser/**/*.ts"
+  ],
+  "exclude": [
+    "packages/scraper/src/node"
+  ]
+}
