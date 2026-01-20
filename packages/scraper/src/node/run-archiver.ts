@@ -1,13 +1,20 @@
-import fs from 'fs';
-import path from 'path';
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
+
 import { authenticateBumble } from './authenticate-bumble.js';
-import { extractConversation } from '../browser/extract-conversation.js';
-import { scrollConversation } from '../browser/scroll-conversation.js';
 import { downloadMedia } from './download-media.js';
 import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from '../constants.js';
+import { injectBrowserHelpers } from './inject-browser-helpers.js';
+import { encodingOptions } from '../shared/encoding-options.js';
+import {
+  BrowserFunctions,
+  ExtractConversationSelectors,
+  ScrollConversationSelectors,
+} from '../shared/browser-functions.js';
 
 (async () => {
   const page = await authenticateBumble();
+  await injectBrowserHelpers(page);
 
   console.log('Waiting for conversations to be ready...');
   await page.waitForSelector(SELECTORS.conversationsContainer, {
@@ -20,10 +27,16 @@ import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from '../constants
   await new Promise<void>(resolve => process.stdin.once('data', () => resolve()));
 
   console.log('Scrolling conversation...');
-  await page.evaluate(scrollConversation, SELECTORS.messagesListScrollContainer);
+  const scrollConversationSelectors: ScrollConversationSelectors = {
+    messagesListScrollContainerSelector: SELECTORS.messagesListScrollContainer,
+  };
+  await page.evaluate(
+    selectors => (globalThis as unknown as BrowserFunctions).scrollConversation(selectors),
+    scrollConversationSelectors
+  );
 
   console.log('Extracting messages...');
-  const archive = await page.evaluate(extractConversation, {
+  const extractConversationSelectors: ExtractConversationSelectors = {
     matchNameSelector: SELECTORS.matchName,
     conversationSelector: SELECTORS.conversation,
     textSelector: SELECTORS.text,
@@ -32,7 +45,11 @@ import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from '../constants
     audioSelector: SELECTORS.audio,
     messageGroupDate: CLASSES.messageGroupDate,
     messageOut: CLASSES.messageOut,
-  });
+  };
+  const archive = await page.evaluate(
+    selectors => (globalThis as unknown as BrowserFunctions).extractConversation(selectors),
+    extractConversationSelectors
+  );
 
   for (const day of archive.conversation.days) {
     for (const message of day.messages) {
@@ -46,7 +63,7 @@ import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from '../constants
     }
   }
 
-  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(archive, null, 2), 'utf-8');
+  await writeFile(OUTPUT_FILE, JSON.stringify(archive, null, 2), encodingOptions);
 
   console.log('Archive complete');
   process.exit(0);

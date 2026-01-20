@@ -1,15 +1,17 @@
-export async function scrollConversation(
-  scrollSelector: string,
-): Promise<void> {
+export async function scrollConversation({
+  messagesListScrollContainerSelector,
+}: {
+  messagesListScrollContainerSelector: string;
+}): Promise<void> {
   const container = document.querySelector(
-    scrollSelector,
+    messagesListScrollContainerSelector
   ) as HTMLElement | null;
 
   if (!container) {
-    throw new Error("Scroll container not found");
+    throw new Error('Scroll container not found');
   }
 
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
   let lastHeight = 0;
   let stableCount = 0;

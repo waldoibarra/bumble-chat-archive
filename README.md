@@ -1,4 +1,4 @@
-# Bumble Conversation Archiver
+# Bumble Chat Archive
 
 One-time, professional-grade archiver for exporting a full Bumble Web conversation (messages + media) before the web app is discontinued.
 
@@ -43,18 +43,6 @@ Structured archive grouped by day, suitable for rendering in any UI.
 Downloaded images and GIFs, organized by conversation date.
 
 Deleted or unavailable media (expired CDN URLs) are skipped safely.
-
-## Project structure
-
-```bash
-src/
-├─ authenticate-bumble.ts   # Launches browser + persists login session
-├─ scroll-conversation.ts   # Loads full chat history via internal scrolling
-├─ extract-conversation.ts  # DOM extraction + JSON shaping
-├─ download-media.ts        # Saves images/GIFs locally
-├─ constants.ts             # URLs, selectors, paths
-└─ run-archiver.ts          # Orchestrates the full flow
-```
 
 ## Notes & limitations
 

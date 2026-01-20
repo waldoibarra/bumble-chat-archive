@@ -4,11 +4,12 @@
     "module": "ESNext",
     "lib": ["ES2022", "DOM"],
     "rootDir": ".",
-    "outDir": "dist/browser",
+    "outDir": "dist",
     "noEmit": true
   },
   "include": [
-    "packages/scraper/src/browser/**/*.ts"
+    "packages/scraper/src/browser/**/*.ts",
+    "packages/scraper/src/shared/**/*.ts"
   ],
   "exclude": [
     "packages/scraper/src/node"

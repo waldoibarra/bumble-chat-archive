@@ -7,9 +7,9 @@
   "scripts": {
     "postinstall": "playwright install chromium",
     "build": "tsc -p ../../tsconfig.node.json",
-    "start": "npm run build && node dist/node/run-archiver.js"
+    "start": "npm run build && node ../../dist/packages/scrapper/src/node/run-archiver.js"
   },
   "dependencies": {
-    "playwright": "^1.57.0"
+    "playwright": "1.57.0"
   }
 }

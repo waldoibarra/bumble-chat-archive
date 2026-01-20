@@ -1,34 +1,4 @@
-type Direction = 'in' | 'out';
-type MediaType = 'image' | 'gif' | 'audio';
-
-interface MediaItem {
-  type: MediaType;
-  url: string;
-}
-
-interface Message {
-  id: number;
-  direction: Direction;
-  timestamp: {
-    date: string;
-    time: null;
-  };
-  text: string | null;
-  media: MediaItem[];
-}
-
-interface DayGroup {
-  date: string;
-  messages: Message[];
-}
-
-interface Archive {
-  conversation: {
-    matchName: string;
-    exportedAt: string;
-    days: DayGroup[];
-  };
-}
+import { Archive, DayGroup, Direction, MediaItem } from '../shared/browser-functions';
 
 export function extractConversation({
   matchNameSelector,
