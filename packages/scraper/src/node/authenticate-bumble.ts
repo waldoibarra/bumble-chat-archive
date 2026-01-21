@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { chromium, Page } from 'playwright';
-import { BUMBLE_URL, AUTH_STATE_FILE } from '../constants.js';
+import { BUMBLE_URL, AUTH_STATE_FILE } from './constants.js';
 
 export async function authenticateBumble(): Promise<Page> {
   const browser = await chromium.launch({ headless: false });

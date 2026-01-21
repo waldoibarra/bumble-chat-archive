@@ -1,8 +1,9 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "outDir": "dist/node",
     "lib": ["ES2022"],
-    "types": []
+    "types": ["node"]
   },
-  "include": ["packages/scraper/src/shared/**/*.ts"]
+  "include": ["src/node/**/*.ts"]
 }

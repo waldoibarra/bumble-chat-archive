@@ -6,11 +6,12 @@
     "packages/*"
   ],
   "scripts": {
-    "scrape": "npm run -w @archive/scraper start",
-    "web": "npm run -w @archive/web dev",
-    "build": "npm run -w @archive/web build",
-    "lint": "eslint .",
+    "build:scraper": "tsc -p packages/scraper/tsconfig.shared.json && tsc -p packages/scraper/tsconfig.browser.json && tsc -p packages/scraper/tsconfig.node.json",
+    "build:web": "tsc -p packages/web",
+    "build": "npm run build:scraper && npm run build:web",
     "format": "prettier --write .",
+    "lint": "eslint .",
+    "scrape": "npm run build && npm run start",
     "typecheck": "tsc -p tsconfig.node.json && tsc -p tsconfig.browser.json"
   },
   "devDependencies": {

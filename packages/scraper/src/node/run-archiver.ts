@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { authenticateBumble } from './authenticate-bumble.js';
 import { downloadMedia } from './download-media.js';
-import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from '../constants.js';
+import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from './constants.js';
 import { injectBrowserHelpers } from './inject-browser-helpers.js';
 import { encodingOptions } from '../shared/encoding-options.js';
 import {

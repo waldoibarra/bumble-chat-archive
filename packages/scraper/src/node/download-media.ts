@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
-import { MIME_EXTENSION_MAP } from '../media-types.js';
+import { MIME_EXTENSION_MAP } from './media-types.js';
 
 interface MediaItem {
   type: 'image' | 'gif' | 'audio';

@@ -1,4 +1,4 @@
-import { Archive, DayGroup, Direction, MediaItem } from '../shared/browser-functions';
+import { Archive, DayGroup, Direction, MediaItem } from '../shared/browser-functions.js';
 
 export function extractConversation({
   matchNameSelector,
