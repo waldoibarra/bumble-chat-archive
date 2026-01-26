@@ -1,37 +1,47 @@
-import { MEDIA_STATUS } from './constants';
+import { MEDIA_KIND, MEDIA_STATUS } from './constants';
+
+/* ---------- primitives ---------- */
 
 export type Direction = 'in' | 'out';
-export type MediaType = 'image' | 'gif' | 'audio';
+
+export type MessageKind = (typeof MEDIA_KIND)[keyof typeof MEDIA_KIND];
+
 export type MediaStatus = (typeof MEDIA_STATUS)[keyof typeof MEDIA_STATUS];
 
-export interface MediaItem {
-  type: MediaType;
-  url: string;
-  status?: MediaStatus;
-}
+/* ---------- message ---------- */
 
-export interface Message {
+export interface BaseMessage {
   id: number;
   direction: Direction;
-  timestamp: {
-    date: string;
-    time: null;
-  };
-  text: string | null;
-  media: MediaItem[];
+  timestamp: string; // ISO 8601
+  kind: MessageKind;
 }
 
-export interface DayGroup {
-  date: string;
+/* ---------- variants ---------- */
+
+export interface TextMessage extends BaseMessage {
+  kind: 'text';
+  text: string;
+}
+
+export interface MediaMessage extends BaseMessage {
+  kind: Exclude<MessageKind, 'text'>;
+  url: string;
+  status?: MediaStatus;
+  localPath?: string;
+  mimeType?: string;
+}
+
+/* ---------- union ---------- */
+
+export type Message = TextMessage | MediaMessage;
+
+/* ---------- archive ---------- */
+
+export interface ConversationArchive {
+  matchName: string;
+  exportedAt: string; // ISO 8601
   messages: Message[];
-}
-
-export interface Archive {
-  conversation: {
-    matchName: string;
-    exportedAt: string;
-    days: DayGroup[];
-  };
 }
 
 export interface ScrollConversationSelectors {
@@ -52,5 +62,5 @@ export interface ExtractConversationSelectors {
 export interface BrowserFunctions {
   scrollConversation: (selectors: ScrollConversationSelectors) => Promise<void>;
 
-  extractConversation: (selectors: ExtractConversationSelectors) => Archive;
+  extractConversation: (selectors: ExtractConversationSelectors) => ConversationArchive;
 }

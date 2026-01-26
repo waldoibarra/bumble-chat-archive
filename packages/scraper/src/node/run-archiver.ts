@@ -9,8 +9,15 @@ import { ENCODING_OPTIONS } from '../shared/encoding-options.js';
 import {
   BrowserFunctions,
   ExtractConversationSelectors,
+  MediaMessage,
+  Message,
   ScrollConversationSelectors,
 } from '../shared/browser-functions.js';
+import { MEDIA_KIND } from '../shared/constants.js';
+
+function isMediaMessage(message: Message): message is MediaMessage {
+  return message.kind !== MEDIA_KIND.TEXT;
+}
 
 (async () => {
   const page = await authenticateBumble();
@@ -46,25 +53,27 @@ import {
     messageGroupDate: CLASSES.messageGroupDate,
     messageOut: CLASSES.messageOut,
   };
-  const archive = await page.evaluate(
+  const conversationArchive = await page.evaluate(
     selectors => (globalThis as unknown as BrowserFunctions).extractConversation(selectors),
     extractConversationSelectors
   );
 
-  for (const day of archive.conversation.days) {
-    for (const message of day.messages) {
-      if (message.media.length) {
-        message.media = await downloadMedia(
-          message.media,
-          path.join(OUTPUT_MEDIA_PATH, archive.conversation.matchName),
-          `message-${message.id.toString()}`
-        );
-      }
+  for (const message of conversationArchive.messages) {
+    if (isMediaMessage(message)) {
+      const { url, localPath, mimeType, status } = await downloadMedia(
+        message as MediaMessage,
+        path.join(OUTPUT_MEDIA_PATH, conversationArchive.matchName)
+      );
+
+      message.url = url;
+      message.localPath = localPath;
+      message.mimeType = mimeType;
+      message.status = status;
     }
   }
 
-  await writeFile(OUTPUT_FILE, JSON.stringify(archive, null, 2), ENCODING_OPTIONS);
+  await writeFile(OUTPUT_FILE, JSON.stringify(conversationArchive, null, 2), ENCODING_OPTIONS);
 
-  console.log('Archive complete');
+  console.log('Conversation archive complete');
   process.exit(0);
 })();
