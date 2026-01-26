@@ -2,17 +2,17 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { encodingOptions } from '../shared/encoding-options.js';
+import { ENCODING_OPTIONS } from '../shared/encoding-options.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const fileName = fileURLToPath(import.meta.url);
+const dirName = path.dirname(fileName);
 
 export async function injectBrowserHelpers(page: import('playwright').Page) {
-  const scrollConversationFnPath = path.resolve(__dirname, '../browser/scroll-conversation.js');
-  const extractConversationFnPath = path.resolve(__dirname, '../browser/extract-conversation.js');
+  const scrollConversationFnPath = path.resolve(dirName, '../browser/scroll-conversation.js');
+  const extractConversationFnPath = path.resolve(dirName, '../browser/extract-conversation.js');
 
-  const scrollConversationFnStr = await readFile(scrollConversationFnPath, encodingOptions);
-  const extractConversationFnStr = await readFile(extractConversationFnPath, encodingOptions);
+  const scrollConversationFnStr = await readFile(scrollConversationFnPath, ENCODING_OPTIONS);
+  const extractConversationFnStr = await readFile(extractConversationFnPath, ENCODING_OPTIONS);
 
   await page.addInitScript(scrollConversationFnStr);
   await page.addInitScript(extractConversationFnStr);

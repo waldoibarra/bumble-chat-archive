@@ -2,26 +2,30 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import { MIME_EXTENSION_MAP } from './media-types.js';
+import { MediaStatus, MediaType } from '../shared/browser-functions.js';
+import { MEDIA_STATUS } from '../shared/constants.js';
 
 interface MediaItem {
-  type: 'image' | 'gif' | 'audio';
+  type: MediaType;
   url: string;
   localPath?: string;
   mimeType?: string;
-  status?: 'available' | 'unavailable';
+  status?: MediaStatus;
 }
+
+const standardMediaType = MIME_EXTENSION_MAP['application/octet-stream'];
 
 function getFileExtensionFromMime(mime?: string): string {
   if (!mime) {
-    return 'bin';
+    return standardMediaType;
   }
 
   const baseMime = mime.split(';')[0]?.trim();
   if (!baseMime) {
-    return 'bin';
+    return standardMediaType;
   }
 
-  return MIME_EXTENSION_MAP[baseMime] ?? 'bin';
+  return MIME_EXTENSION_MAP[baseMime] ?? standardMediaType;
 }
 
 function removeSizeParam(url: string): string {
@@ -68,7 +72,7 @@ export async function downloadMedia(
                 url: cleanUrl,
                 localPath: filePath,
                 mimeType,
-                status: 'available',
+                status: MEDIA_STATUS.AVAILABLE,
               });
               resolve();
             });
@@ -79,7 +83,7 @@ export async function downloadMedia(
       results.push({
         ...item,
         url: cleanUrl,
-        status: 'unavailable',
+        status: MEDIA_STATUS.UNAVAILABLE,
       });
     }
   }

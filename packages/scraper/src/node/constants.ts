@@ -14,9 +14,9 @@ export const SELECTORS = {
   image: '.message-media__image img',
   gifSource: '.message-gif__media source',
   audio: '.message-audio audio',
-};
+} as const;
 
 export const CLASSES = {
   messageGroupDate: 'message-group-date',
   messageOut: 'message--out',
-};
+} as const;

@@ -1,9 +1,13 @@
+import { MEDIA_STATUS } from './constants';
+
 export type Direction = 'in' | 'out';
 export type MediaType = 'image' | 'gif' | 'audio';
+export type MediaStatus = (typeof MEDIA_STATUS)[keyof typeof MEDIA_STATUS];
 
 export interface MediaItem {
   type: MediaType;
   url: string;
+  status?: MediaStatus;
 }
 
 export interface Message {

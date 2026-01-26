@@ -15,4 +15,7 @@ export const MIME_EXTENSION_MAP: Record<string, string> = {
   'audio/ogg': 'ogg',
   'audio/webm': 'webm',
   'audio/wav': 'wav',
+
+  // Generic binary data file
+  'application/octet-stream': 'bin',
 };
