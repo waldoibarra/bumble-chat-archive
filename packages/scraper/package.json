@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "dist/node/index.js",
+  "main": "dist/node/run-archiver.js",
   "scripts": {
     "postinstall": "playwright install chromium",
-    "build": "tsc -b .",
+    "build:node": "tsc -b .",
+    "build:browser": "esbuild src/browser/*.ts --bundle --format=iife --platform=browser --outdir=dist/browser",
+    "build": "npm run build:node && npm run build:browser",
     "start": "node dist/node/run-archiver.js"
   },
   "dependencies": {

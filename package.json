@@ -6,18 +6,19 @@
     "packages/*"
   ],
   "scripts": {
-    "build:scraper": "tsc -p packages/scraper/tsconfig.shared.json && tsc -p packages/scraper/tsconfig.browser.json && tsc -p packages/scraper/tsconfig.node.json",
+    "build:scraper": "npm run -w @archive/scraper build",
     "build:web": "tsc -p packages/web",
     "build": "npm run build:scraper && npm run build:web",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "scrape": "npm run build && npm run start",
+    "scrape": "npm run build:scraper && npm run -w @archive/scraper start",
     "typecheck": "tsc -p tsconfig.node.json && tsc -p tsconfig.browser.json"
   },
   "devDependencies": {
     "@types/node": "25.0.9",
     "@typescript-eslint/eslint-plugin": "8.53.1",
     "@typescript-eslint/parser": "8.53.1",
+    "esbuild": "0.27.2",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-js": "github:eslint/js",

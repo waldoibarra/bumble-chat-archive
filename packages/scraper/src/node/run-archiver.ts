@@ -1,13 +1,16 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { Page } from 'playwright';
 
 import { authenticateBumble } from './authenticate-bumble.js';
 import { downloadMedia } from './download-media.js';
 import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from './constants.js';
-import { injectBrowserHelpers } from './inject-browser-helpers.js';
 import { ENCODING_OPTIONS } from '../shared/encoding-options.js';
 import {
   BrowserFunctions,
+  Conversation,
   ExtractConversationSelectors,
   MediaMessage,
   Message,
@@ -15,14 +18,7 @@ import {
 } from '../shared/browser-functions.js';
 import { MEDIA_KIND } from '../shared/constants.js';
 
-function isMediaMessage(message: Message): message is MediaMessage {
-  return message.kind !== MEDIA_KIND.TEXT;
-}
-
-(async () => {
-  const page = await authenticateBumble();
-  await injectBrowserHelpers(page);
-
+async function waitForConversationSelection(page: Page): Promise<void> {
   console.log('Waiting for conversations to be ready...');
   await page.waitForSelector(SELECTORS.conversationsContainer, {
     timeout: 0,
@@ -32,7 +28,9 @@ function isMediaMessage(message: Message): message is MediaMessage {
     'Select the conversation and wait until messages are visible, THEN press ENTER in this terminal.'
   );
   await new Promise<void>(resolve => process.stdin.once('data', () => resolve()));
+}
 
+async function scrollConversationToLoadAllMessages(page: Page): Promise<void> {
   console.log('Scrolling conversation...');
   const scrollConversationSelectors: ScrollConversationSelectors = {
     messagesListScrollContainerSelector: SELECTORS.messagesListScrollContainer,
@@ -41,28 +39,38 @@ function isMediaMessage(message: Message): message is MediaMessage {
     selectors => (globalThis as unknown as BrowserFunctions).scrollConversation(selectors),
     scrollConversationSelectors
   );
+}
 
+async function extractConversationMessages(page: Page): Promise<Conversation> {
   console.log('Extracting messages...');
   const extractConversationSelectors: ExtractConversationSelectors = {
     matchNameSelector: SELECTORS.matchName,
     conversationSelector: SELECTORS.conversation,
     textSelector: SELECTORS.text,
     imageSelector: SELECTORS.image,
-    gifSourceSelector: SELECTORS.gifSource,
+    gifSelector: SELECTORS.gif,
     audioSelector: SELECTORS.audio,
-    messageGroupDate: CLASSES.messageGroupDate,
-    messageOut: CLASSES.messageOut,
+    messageGroupDateClass: CLASSES.messageGroupDate,
+    messageOutClass: CLASSES.messageOut,
   };
-  const conversationArchive = await page.evaluate(
+  const conversation = await page.evaluate(
     selectors => (globalThis as unknown as BrowserFunctions).extractConversation(selectors),
     extractConversationSelectors
   );
 
-  for (const message of conversationArchive.messages) {
+  return conversation;
+}
+
+function isMediaMessage(message: Message): message is MediaMessage {
+  return message.kind !== MEDIA_KIND.TEXT;
+}
+
+async function downloadConversationMediaMessages(conversation: Conversation): Promise<void> {
+  for (const message of conversation.messages) {
     if (isMediaMessage(message)) {
       const { url, localPath, mimeType, status } = await downloadMedia(
         message as MediaMessage,
-        path.join(OUTPUT_MEDIA_PATH, conversationArchive.matchName)
+        path.join(OUTPUT_MEDIA_PATH, conversation.matchName)
       );
 
       message.url = url;
@@ -71,9 +79,28 @@ function isMediaMessage(message: Message): message is MediaMessage {
       message.status = status;
     }
   }
+}
 
-  await writeFile(OUTPUT_FILE, JSON.stringify(conversationArchive, null, 2), ENCODING_OPTIONS);
+async function archiveConversation(conversation: Conversation): Promise<void> {
+  const projectRootUrl = new URL('../../../../', import.meta.url);
+  const outputPath = fileURLToPath(new URL(OUTPUT_FILE, projectRootUrl));
+  const stringifiedConversation = JSON.stringify(conversation, null, 2);
 
+  await writeFile(outputPath, stringifiedConversation, ENCODING_OPTIONS);
   console.log('Conversation archive complete');
-  process.exit(0);
-})();
+}
+
+async function main(): Promise<void> {
+  // setup browser, login, archive.
+  const page = await authenticateBumble();
+
+  await waitForConversationSelection(page);
+  // await scrollConversationToLoadAllMessages(page);
+
+  const conversation = await extractConversationMessages(page);
+  await new Promise<void>(resolve => process.stdin.once('data', () => resolve()));
+  await downloadConversationMediaMessages(conversation);
+  await archiveConversation(conversation);
+}
+
+await main();

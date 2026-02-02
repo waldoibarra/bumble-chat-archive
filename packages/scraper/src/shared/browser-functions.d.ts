@@ -36,9 +36,9 @@ export interface MediaMessage extends BaseMessage {
 
 export type Message = TextMessage | MediaMessage;
 
-/* ---------- archive ---------- */
+/* ------ conversation ------- */
 
-export interface ConversationArchive {
+export interface Conversation {
   matchName: string;
   exportedAt: string; // ISO 8601
   messages: Message[];
@@ -53,14 +53,14 @@ export interface ExtractConversationSelectors {
   conversationSelector: string;
   textSelector: string;
   imageSelector: string;
-  gifSourceSelector: string;
+  gifSelector: string;
   audioSelector: string;
-  messageGroupDate: string;
-  messageOut: string;
+  messageGroupDateClass: string;
+  messageOutClass: string;
 }
 
 export interface BrowserFunctions {
   scrollConversation: (selectors: ScrollConversationSelectors) => Promise<void>;
 
-  extractConversation: (selectors: ExtractConversationSelectors) => ConversationArchive;
+  extractConversation: (selectors: ExtractConversationSelectors) => Conversation;
 }

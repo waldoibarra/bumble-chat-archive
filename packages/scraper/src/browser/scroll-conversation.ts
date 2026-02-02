@@ -1,8 +1,9 @@
+/// <reference lib="dom" />
+import { ScrollConversationSelectors } from '../shared/browser-functions.js';
+
 export async function scrollConversation({
   messagesListScrollContainerSelector,
-}: {
-  messagesListScrollContainerSelector: string;
-}): Promise<void> {
+}: ScrollConversationSelectors): Promise<void> {
   const container = document.querySelector(
     messagesListScrollContainerSelector
   ) as HTMLElement | null;
@@ -41,3 +42,5 @@ export async function scrollConversation({
     await sleep(500);
   }
 }
+
+(globalThis as any).scrollConversation = scrollConversation;

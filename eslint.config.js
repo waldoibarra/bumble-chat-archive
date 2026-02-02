@@ -23,6 +23,8 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
+        project: path.resolve(__dirname, 'packages/scraper/tsconfig.json'),
+        tsconfigRootDir: __dirname,
       },
     },
     plugins: {
@@ -80,10 +82,6 @@ export default [
   {
     files: ['packages/scraper/src/node/**/*.ts'],
     languageOptions: {
-      parserOptions: {
-        project: path.resolve(__dirname, 'packages/scraper/tsconfig.node.json'),
-        tsconfigRootDir: __dirname,
-      },
       globals: {
         process: 'readonly',
         Buffer: 'readonly',
@@ -97,26 +95,9 @@ export default [
   {
     files: ['packages/scraper/src/browser/**/*.ts'],
     languageOptions: {
-      parserOptions: {
-        project: path.resolve(__dirname, 'packages/scraper/tsconfig.browser.json'),
-        tsconfigRootDir: __dirname,
-      },
       globals: {
         window: 'readonly',
         document: 'readonly',
-      },
-    },
-  },
-
-  /* =========================
-     SHARED FILES
-     ========================= */
-  {
-    files: ['packages/scraper/src/shared/**/*.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: path.resolve(__dirname, 'packages/scraper/tsconfig.shared.json'),
-        tsconfigRootDir: __dirname,
       },
     },
   },
@@ -127,10 +108,6 @@ export default [
   {
     files: ['packages/web/src/**/*.ts'],
     languageOptions: {
-      parserOptions: {
-        project: path.resolve(__dirname, 'packages/web/tsconfig.web.json'),
-        tsconfigRootDir: __dirname,
-      },
       globals: {
         window: 'readonly',
         document: 'readonly',

@@ -3,3 +3,4 @@ conversation.json
 media/
 dist/
 node_modules/
+*.tsbuildinfo

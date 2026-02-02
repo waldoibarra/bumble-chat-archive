@@ -11,9 +11,9 @@ export const SELECTORS = {
   message: '.message',
   dateSeparator: '.message-group-date',
   text: '.message-bubble__text',
-  image: '.message-media__image img',
-  gifSource: '.message-gif__media source',
-  audio: '.message-audio audio',
+  image: '.message-media__image',
+  gif: '.message-gif__media',
+  audio: '.message-audio',
 } as const;
 
 export const CLASSES = {
