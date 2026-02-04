@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 import { ScrollConversationSelectors } from '../shared/browser-functions.js';
 
 export async function scrollConversation({

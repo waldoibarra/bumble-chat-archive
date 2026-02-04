@@ -1,5 +1,4 @@
-/// <reference lib="dom" />
-import { BrowserFunctions, WaitForMessageHydrationAndGetSrc } from '../shared/browser-functions';
+import { BrowserFunctions, WaitForMessageHydrationAndGetSrc } from '../shared/browser-functions.js';
 
 type MediaElement = HTMLImageElement | HTMLVideoElement | HTMLAudioElement;
 

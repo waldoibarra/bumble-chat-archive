@@ -9,8 +9,7 @@
 
     "target": "ES2022",
     "types": ["node"],
-    "lib": ["ES2022"]
+    "lib": ["ES2022", "DOM"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/browser"]
+  "include": ["src/**/*.ts"]
 }
