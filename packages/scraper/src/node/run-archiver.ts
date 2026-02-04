@@ -1,6 +1,5 @@
-import { writeFile } from 'node:fs/promises';
+import { writeFile, rm, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { Page } from 'playwright';
 
@@ -17,9 +16,15 @@ import {
   ScrollConversationSelectors,
 } from '../shared/browser-functions.js';
 import { MEDIA_KIND } from '../shared/constants.js';
+import { setupBrowser } from './setup-browser.js';
+import { getPathFromProjectRoot } from './utils/get-path-from-project-root.js';
+
+async function waitForUserToPressEnter(): Promise<void> {
+  await new Promise<void>(resolve => process.stdin.once('data', () => resolve()));
+}
 
 async function waitForConversationSelection(page: Page): Promise<void> {
-  console.log('Waiting for conversations to be ready...');
+  console.log('Waiting for conversations to be ready.');
   await page.waitForSelector(SELECTORS.conversationsContainer, {
     timeout: 0,
   });
@@ -27,11 +32,11 @@ async function waitForConversationSelection(page: Page): Promise<void> {
   console.log(
     'Select the conversation and wait until messages are visible, THEN press ENTER in this terminal.'
   );
-  await new Promise<void>(resolve => process.stdin.once('data', () => resolve()));
+  await waitForUserToPressEnter();
 }
 
 async function scrollConversationToLoadAllMessages(page: Page): Promise<void> {
-  console.log('Scrolling conversation...');
+  console.log('Scrolling conversation to load all messages.');
   const scrollConversationSelectors: ScrollConversationSelectors = {
     messagesListScrollContainerSelector: SELECTORS.messagesListScrollContainer,
   };
@@ -42,10 +47,14 @@ async function scrollConversationToLoadAllMessages(page: Page): Promise<void> {
 }
 
 async function extractConversationMessages(page: Page): Promise<Conversation> {
-  console.log('Extracting messages...');
+  console.log('Extracting conversation messages.');
   const extractConversationSelectors: ExtractConversationSelectors = {
     matchNameSelector: SELECTORS.matchName,
     conversationSelector: SELECTORS.conversation,
+    textContainerSelector: SELECTORS.textContainer,
+    imageContainerSelector: SELECTORS.imageContainer,
+    gifContainerSelector: SELECTORS.gifContainer,
+    audioContainerSelector: SELECTORS.audioContainer,
     textSelector: SELECTORS.text,
     imageSelector: SELECTORS.image,
     gifSelector: SELECTORS.gif,
@@ -54,11 +63,20 @@ async function extractConversationMessages(page: Page): Promise<Conversation> {
     messageOutClass: CLASSES.messageOut,
   };
   const conversation = await page.evaluate(
-    selectors => (globalThis as unknown as BrowserFunctions).extractConversation(selectors),
+    async selectors => (globalThis as unknown as BrowserFunctions).extractConversation(selectors),
     extractConversationSelectors
   );
 
   return conversation;
+}
+
+async function recreateMediaDirectory(matchName: string): Promise<void> {
+  const mediaPath = path.join(OUTPUT_MEDIA_PATH, matchName);
+  const outputPath = getPathFromProjectRoot(mediaPath);
+
+  console.log(`Recreating media directory: ${mediaPath}.`);
+  await rm(outputPath, { recursive: true, force: true });
+  await mkdir(outputPath, { recursive: true });
 }
 
 function isMediaMessage(message: Message): message is MediaMessage {
@@ -66,41 +84,53 @@ function isMediaMessage(message: Message): message is MediaMessage {
 }
 
 async function downloadConversationMediaMessages(conversation: Conversation): Promise<void> {
-  for (const message of conversation.messages) {
-    if (isMediaMessage(message)) {
-      const { url, localPath, mimeType, status } = await downloadMedia(
-        message as MediaMessage,
-        path.join(OUTPUT_MEDIA_PATH, conversation.matchName)
-      );
+  const mediaMessages = conversation.messages.filter(isMediaMessage);
 
-      message.url = url;
-      message.localPath = localPath;
-      message.mimeType = mimeType;
-      message.status = status;
-    }
+  if (!mediaMessages.length) return;
+
+  const mediaPath = path.join(OUTPUT_MEDIA_PATH, conversation.matchName);
+  const outputPath = getPathFromProjectRoot(mediaPath);
+  console.log(`Downloading conversation media messages on: ${mediaPath}.`);
+
+  for (const message of mediaMessages) {
+    const { url, localPath, mimeType, status } = await downloadMedia(
+      message as MediaMessage,
+      outputPath
+    );
+
+    message.url = url;
+    message.localPath = localPath;
+    message.mimeType = mimeType;
+    message.status = status;
   }
 }
 
-async function archiveConversation(conversation: Conversation): Promise<void> {
-  const projectRootUrl = new URL('../../../../', import.meta.url);
-  const outputPath = fileURLToPath(new URL(OUTPUT_FILE, projectRootUrl));
+async function persistConversationFile(conversation: Conversation): Promise<void> {
+  const archivePath = path.join(OUTPUT_MEDIA_PATH, conversation.matchName, OUTPUT_FILE);
+  const outputPath = getPathFromProjectRoot(archivePath);
   const stringifiedConversation = JSON.stringify(conversation, null, 2);
 
+  console.log(`Persisting conversation file: ${archivePath}.`);
   await writeFile(outputPath, stringifiedConversation, ENCODING_OPTIONS);
-  console.log('Conversation archive complete');
+  console.log('Conversation archive complete.');
+}
+
+async function archiveConversation(page: Page): Promise<void> {
+  await waitForConversationSelection(page);
+  await scrollConversationToLoadAllMessages(page);
+
+  const conversation = await extractConversationMessages(page);
+  await recreateMediaDirectory(conversation.matchName);
+  await downloadConversationMediaMessages(conversation);
+  await persistConversationFile(conversation);
 }
 
 async function main(): Promise<void> {
-  // setup browser, login, archive.
-  const page = await authenticateBumble();
+  const { page, context } = await setupBrowser();
+  await authenticateBumble(context);
+  await archiveConversation(page);
 
-  await waitForConversationSelection(page);
-  // await scrollConversationToLoadAllMessages(page);
-
-  const conversation = await extractConversationMessages(page);
-  await new Promise<void>(resolve => process.stdin.once('data', () => resolve()));
-  await downloadConversationMediaMessages(conversation);
-  await archiveConversation(conversation);
+  process.exit(0);
 }
 
 await main();

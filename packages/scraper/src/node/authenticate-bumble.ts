@@ -1,39 +1,16 @@
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { BrowserContext } from 'playwright';
 
-import { chromium, Page } from 'playwright';
+import { AUTH_STATE_FILE } from './constants.js';
+import { getPathFromProjectRoot } from './utils/get-path-from-project-root.js';
+import { checkFileExists } from './utils/check-file-exists.js';
 
-import { injectBrowserHelpers } from './inject-browser-helpers.js';
-import { BUMBLE_URL, AUTH_STATE_FILE } from './constants.js';
-
-export async function authenticateBumble(): Promise<Page> {
-  const browser = await chromium.launch({ headless: false });
-
-  const projectRootUrl = new URL('../../../../', import.meta.url);
-  const outputPath = fileURLToPath(new URL(AUTH_STATE_FILE, projectRootUrl));
-  const existsAuthFile = fs.existsSync(outputPath);
-
-  const context = existsAuthFile
-    ? await browser.newContext({ storageState: outputPath })
-    : await browser.newContext();
-
-  const page = await context.newPage();
-
-  await injectBrowserHelpers(page);
-  await page.goto(BUMBLE_URL, { waitUntil: 'domcontentloaded' });
-
-  await page.evaluate(() => {
-    if (typeof (globalThis as any).extractConversation !== 'function') {
-      throw new Error('extractConversation not installed');
-    }
-  });
+export async function authenticateBumble(context: BrowserContext): Promise<void> {
+  const storageStatePath = getPathFromProjectRoot(AUTH_STATE_FILE);
+  const existsAuthFile = await checkFileExists(storageStatePath);
 
   if (!existsAuthFile) {
-    console.log('Log in if needed, then click the conversation you want to archive.\n');
-
-    await context.storageState({ path: outputPath });
-    console.log('Auth state saved');
+    console.log('You need to log in.');
+    await context.storageState({ path: storageStatePath });
+    console.log(`Auth state file saved: ${AUTH_STATE_FILE}`);
   }
-
-  return page;
 }

@@ -1,6 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import https from 'https';
+import fs from 'node:fs';
+import path from 'node:path';
+import https from 'node:https';
+
 import { MIME_EXTENSION_MAP } from './media-types.js';
 import { MediaMessage } from '../shared/browser-functions.js';
 import { MEDIA_STATUS } from '../shared/constants.js';
@@ -32,8 +33,6 @@ function removeSizeParam(url: string): string {
 }
 
 export async function downloadMedia(media: MediaMessage, outputDir: string): Promise<MediaMessage> {
-  fs.mkdirSync(outputDir, { recursive: true });
-
   let result: MediaMessage;
 
   const cleanUrl = removeSizeParam(media.url);

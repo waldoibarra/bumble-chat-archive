@@ -51,6 +51,10 @@ export interface ScrollConversationSelectors {
 export interface ExtractConversationSelectors {
   matchNameSelector: string;
   conversationSelector: string;
+  textContainerSelector: string;
+  imageContainerSelector: string;
+  gifContainerSelector: string;
+  audioContainerSelector: string;
   textSelector: string;
   imageSelector: string;
   gifSelector: string;
@@ -59,8 +63,18 @@ export interface ExtractConversationSelectors {
   messageOutClass: string;
 }
 
-export interface BrowserFunctions {
-  scrollConversation: (selectors: ScrollConversationSelectors) => Promise<void>;
+export type ScrollConversation = (selectors: ScrollConversationSelectors) => Promise<void>;
+export type WaitForMessageHydrationAndGetSrc = (
+  node: Element,
+  selector: string,
+  timeoutMs?: number
+) => Promise<string>;
+export type ExtractConversation = (
+  selectors: ExtractConversationSelectors
+) => Promise<Conversation>;
 
-  extractConversation: (selectors: ExtractConversationSelectors) => Conversation;
+export interface BrowserFunctions {
+  scrollConversation: ScrollConversation;
+  waitForMessageHydrationAndGetSrc: WaitForMessageHydrationAndGetSrc;
+  extractConversation: ExtractConversation;
 }

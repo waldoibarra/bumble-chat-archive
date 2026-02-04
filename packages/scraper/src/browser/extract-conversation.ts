@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 import {
-  Conversation,
+  BrowserFunctions,
   Direction,
-  ExtractConversationSelectors,
+  ExtractConversation,
   Message,
   MessageKind,
 } from '../shared/browser-functions.js';
@@ -14,22 +14,51 @@ interface NodeData {
   url?: string;
 }
 
-function getNodeData(
+const hoursToSubstractFromScrappedTimelessDateHeader = 6;
+
+function parseDate(raw: string): string {
+  const normalizedDate = raw.replace(/\u00A0/g, ' ').trim();
+  const date = new Date(normalizedDate);
+
+  date.setHours(date.getHours() - hoursToSubstractFromScrappedTimelessDateHeader);
+
+  return date.toISOString();
+}
+
+function normalizeUnicodeSeparators(text: string = ''): string {
+  return (
+    text
+      .trim()
+      // Paragraph Separator → blank line
+      .replace(/\u2029/g, '\n\n')
+      // Line Separator → single line break
+      .replace(/\u2028/g, '\n')
+  );
+}
+
+async function getNodeData(
   node: Element,
   {
-    textSelector,
+    textContainerSelector,
+    imageContainerSelector,
+    gifContainerSelector,
+    audioContainerSelector,
     imageSelector,
     gifSelector,
     audioSelector,
   }: {
+    textContainerSelector: string;
+    imageContainerSelector: string;
+    gifContainerSelector: string;
+    audioContainerSelector: string;
     textSelector: string;
     imageSelector: string;
     gifSelector: string;
     audioSelector: string;
   }
-): NodeData {
-  const textEl = node.querySelector(textSelector);
-  const text = textEl?.textContent?.trim();
+): Promise<NodeData> {
+  const textEl = node.querySelector(textContainerSelector);
+  const text = normalizeUnicodeSeparators(textEl?.textContent);
 
   if (text) {
     return {
@@ -38,67 +67,85 @@ function getNodeData(
     };
   }
 
-  const imageEl = node.querySelector(imageSelector) as HTMLImageElement | null;
-  const gifEl = node.querySelector(gifSelector) as HTMLVideoElement | null;
-  const audioEl = node.querySelector(audioSelector) as HTMLAudioElement | null;
+  const imageEl = node.querySelector(imageContainerSelector) as HTMLImageElement | null;
+  const gifEl = node.querySelector(gifContainerSelector) as HTMLVideoElement | null;
+  const audioEl = node.querySelector(audioContainerSelector) as HTMLAudioElement | null;
 
-  const hasImage = !!imageEl?.src;
-  const hasGif = !!gifEl?.src;
-  const hasAudio = !!audioEl?.src;
+  if (imageEl) {
+    const url = await (globalThis as unknown as BrowserFunctions).waitForMessageHydrationAndGetSrc(
+      node,
+      imageSelector
+    );
 
-  if (hasImage) {
     return {
       kind: MEDIA_KIND.IMAGE,
-      url: imageEl!.src,
+      url,
     };
   }
 
-  if (hasGif) {
+  if (gifEl) {
+    const url = await (globalThis as unknown as BrowserFunctions).waitForMessageHydrationAndGetSrc(
+      node,
+      gifSelector
+    );
+
     return {
       kind: MEDIA_KIND.GIF,
-      url: gifEl!.src,
+      url,
     };
   }
 
-  if (hasAudio) {
+  if (audioEl) {
+    const url = await (globalThis as unknown as BrowserFunctions).waitForMessageHydrationAndGetSrc(
+      node,
+      audioSelector
+    );
+
     return {
       kind: MEDIA_KIND.AUDIO,
-      url: audioEl!.src,
+      url,
     };
   }
 
   throw new Error('Unknown media kind');
 }
 
-function extractConversation({
+const extractConversation: ExtractConversation = async ({
   matchNameSelector,
   conversationSelector,
+  textContainerSelector,
+  imageContainerSelector,
+  gifContainerSelector,
+  audioContainerSelector,
   textSelector,
   imageSelector,
   gifSelector,
   audioSelector,
   messageGroupDateClass,
   messageOutClass,
-}: ExtractConversationSelectors): Conversation {
-  const normalizeDate = (raw: string): string => raw.replace(/\u00A0/g, ' ').trim();
-
+}) => {
   const root = document.querySelector(conversationSelector);
   if (!root) throw new Error('Conversation container not found');
 
   const messages: Message[] = [];
   let currentDay: string | null = null;
+  let messageId: number = 1;
 
-  Array.from(root.children).forEach((node, index) => {
+  for await (const node of Array.from(root.children)) {
     if (node.classList.contains(messageGroupDateClass)) {
-      currentDay = normalizeDate(node.textContent || '');
-      return;
+      currentDay = parseDate(node.textContent || '');
+      continue;
     }
 
-    if (!node.classList.contains('message') || !currentDay) return;
+    if (!node.classList.contains('message') || !currentDay) continue;
 
     const direction: Direction = node.classList.contains(messageOutClass) ? 'out' : 'in';
 
-    const { kind, text, url } = getNodeData(node, {
+    const { kind, text, url } = await getNodeData(node, {
+      textContainerSelector,
+      imageContainerSelector,
+      gifContainerSelector,
+      audioContainerSelector,
       textSelector,
       imageSelector,
       gifSelector,
@@ -107,7 +154,7 @@ function extractConversation({
 
     if (kind === MEDIA_KIND.TEXT) {
       messages.push({
-        id: index,
+        id: messageId++,
         direction,
         timestamp: currentDay,
         kind: MEDIA_KIND.TEXT,
@@ -115,14 +162,14 @@ function extractConversation({
       });
     } else {
       messages.push({
-        id: index,
+        id: messageId++,
         direction,
         timestamp: currentDay,
         kind,
         url: url!,
       });
     }
-  });
+  }
 
   const matchNameEl = document.querySelector(matchNameSelector);
 
@@ -131,6 +178,6 @@ function extractConversation({
     exportedAt: new Date().toISOString(),
     messages,
   };
-}
+};
 
 (globalThis as any).extractConversation = extractConversation;
