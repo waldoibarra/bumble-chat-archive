@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { Page } from 'playwright';
 
-import { authenticateBumble } from './authenticate-bumble.js';
+import { ensureAuthentication } from './ensure-authentication.js';
 import { downloadMedia } from './download-media.js';
 import { CLASSES, OUTPUT_FILE, OUTPUT_MEDIA_PATH, SELECTORS } from './constants.js';
 import { ENCODING_OPTIONS } from '../shared/encoding-options.js';
@@ -24,11 +24,6 @@ async function waitForUserToPressEnter(): Promise<void> {
 }
 
 async function waitForConversationSelection(page: Page): Promise<void> {
-  console.log('Waiting for conversations to be ready.');
-  await page.waitForSelector(SELECTORS.conversationsContainer, {
-    timeout: 0,
-  });
-
   console.log(
     'Select the conversation and wait until messages are visible, THEN press ENTER in this terminal.'
   );
@@ -127,7 +122,7 @@ async function archiveConversation(page: Page): Promise<void> {
 
 async function main(): Promise<void> {
   const { page, context } = await setupBrowser();
-  await authenticateBumble(context);
+  await ensureAuthentication({ page, context });
   await archiveConversation(page);
 
   process.exit(0);

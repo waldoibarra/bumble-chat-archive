@@ -9,7 +9,7 @@
     "build:node": "tsc -b .",
     "build:browser": "esbuild src/browser/*.ts --bundle --format=iife --platform=browser --outdir=dist/browser",
     "build": "npm run build:node && npm run build:browser",
-    "start": "node dist/node/run-archiver.js"
+    "start": "node ."
   },
   "dependencies": {
     "playwright": "1.57.0"
