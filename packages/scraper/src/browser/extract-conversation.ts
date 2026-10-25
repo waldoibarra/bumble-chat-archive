@@ -13,6 +13,7 @@ interface NodeData {
   url?: string;
 }
 
+// Day separators lack message times; this fixed offset does not recover them.
 const hoursToSubstractFromScrappedTimelessDateHeader = 6;
 
 function parseDate(raw: string): string {

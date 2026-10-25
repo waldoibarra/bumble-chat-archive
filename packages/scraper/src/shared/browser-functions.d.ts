@@ -13,7 +13,7 @@ export type MediaStatus = (typeof MEDIA_STATUS)[keyof typeof MEDIA_STATUS];
 export interface BaseMessage {
   id: number;
   direction: Direction;
-  timestamp: string; // ISO 8601
+  timestamp: string; // ISO 8601, derived from a day separator, not the message time
   kind: MessageKind;
 }
 
